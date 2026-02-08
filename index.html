@@ -143,9 +143,17 @@ const ExamAnalysis = () => {
       return;
     }
 
+    // Split tags to avoid parser confusion in the previewer
+    const htmlStart = '<' + 'html';
+    const htmlEnd = '<' + '/html>';
+    const bodyStart = '<' + 'body';
+    const bodyEnd = '<' + '/body>';
+    const headStart = '<' + 'head';
+    const headEnd = '<' + '/head>';
+
     const htmlContent = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head>
+      ${htmlStart} xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      ${headStart}
         <meta charset='utf-8'>
         <title>รายงานผลการวิเคราะห์ข้อสอบ</title>
         <style>
@@ -158,8 +166,8 @@ const ExamAnalysis = () => {
           .status-pass { color: green; font-weight: bold; }
           .status-fail { color: red; font-weight: bold; }
         </style>
-      </head>
-      <body>
+      ${headEnd}
+      ${bodyStart}
         <div class="header">
           <h1>รายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)</h1>
           <p>
@@ -234,8 +242,8 @@ const ExamAnalysis = () => {
            <p>ลงชื่อ........................................................ผู้วิเคราะห์</p>
            <p>(........................................................)</p>
         </div>
-      </body>
-      </html>
+      ${bodyEnd}
+      ${htmlEnd}
     `;
 
     const blob = new Blob(['\ufeff', htmlContent], {
