@@ -143,110 +143,116 @@ const ExamAnalysis = () => {
       return;
     }
 
-    // Split tags to avoid parser confusion in the previewer
-    const htmlStart = '<' + 'html';
-    const htmlEnd = '<' + '/html>';
-    const bodyStart = '<' + 'body';
-    const bodyEnd = '<' + '/body>';
-    const headStart = '<' + 'head';
-    const headEnd = '<' + '/head>';
-
-    const htmlContent = `
-      ${htmlStart} xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      ${headStart}
-        <meta charset='utf-8'>
-        <title>รายงานผลการวิเคราะห์ข้อสอบ</title>
-        <style>
-          body { font-family: 'TH Sarabun New', 'Angsana New', sans-serif; }
-          table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-          th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-          th { background-color: #f0f0f0; }
-          .header { text-align: center; margin-bottom: 20px; }
-          .section-title { font-weight: bold; font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
-          .status-pass { color: green; font-weight: bold; }
-          .status-fail { color: red; font-weight: bold; }
-        </style>
-      ${headEnd}
-      ${bodyStart}
-        <div class="header">
-          <h1>รายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)</h1>
-          <p>
-            <strong>วิชา:</strong> ${meta.subjectName} (${meta.subjectCode}) &nbsp;&nbsp;
-            <strong>อาจารย์ผู้สอน:</strong> ${meta.instructor}
-          </p>
-          <p>
-            <strong>ภาคเรียนที่:</strong> ${meta.semester}/${meta.year} &nbsp;&nbsp;
-            <strong>วันที่พิมพ์:</strong> ${new Date().toLocaleDateString('th-TH')}
-          </p>
-        </div>
-
-        <div class="section-title">1. สรุปผลการวิเคราะห์ (Summary Statistics)</div>
-        <table>
-          <tr>
-             <th>คะแนนเฉลี่ย (Mean)</th>
-             <th>ส่วนเบี่ยงเบนมาตรฐาน (SD)</th>
-             <th>ความเชื่อมั่น (KR-20)</th>
-             <th>ความเชื่อมั่น (KR-21)</th>
-          </tr>
-          <tr>
-             <td>${results.basic.mean} (เต็ม ${results.basic.fullScore})</td>
-             <td>${results.basic.sd}</td>
-             <td>${results.basic.kr20}</td>
-             <td>${results.basic.kr21}</td>
-          </tr>
-        </table>
-        <table>
-          <tr>
-             <th>คะแนนสูงสุด (Max)</th>
-             <th>คะแนนต่ำสุด (Min)</th>
-             <th>จำนวนนักเรียน (N)</th>
-          </tr>
-          <tr>
-             <td>${results.basic.max}</td>
-             <td>${results.basic.min}</td>
-             <td>${results.basic.count}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">2. ตารางวิเคราะห์รายข้อ (Item Analysis)</div>
-        <table>
-          <thead>
-            <tr>
-              <th width="10%">ข้อที่</th>
-              <th width="15%">ค่าความยาก (p)</th>
-              <th width="20%">ความหมาย</th>
-              <th width="15%">อำนาจจำแนก (r)</th>
-              <th width="20%">ความหมาย</th>
-              <th width="20%">ผลสรุป</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${results.items.map(item => {
-              const isPass = parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 && parseFloat(item.r) >= 0.2;
-              return `
-              <tr>
-                <td>${item.id}</td>
-                <td>${item.p}</td>
-                <td>${item.difficultyMeaning}</td>
-                <td>${item.r}</td>
-                <td>${item.discriminationMeaning}</td>
-                <td><span class="${isPass ? 'status-pass' : 'status-fail'}">${isPass ? '✓ ใช้ได้' : '✕ ควรปรับปรุง'}</span></td>
-              </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-        
-        <br/><br/>
-        <div style="text-align: right; margin-top: 50px;">
-           <p>ลงชื่อ........................................................ผู้วิเคราะห์</p>
-           <p>(........................................................)</p>
-        </div>
-      ${bodyEnd}
-      ${htmlEnd}
+    // Styles content
+    const cssContent = `
+      body { font-family: 'TH Sarabun New', 'Angsana New', sans-serif; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+      th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+      th { background-color: #f0f0f0; }
+      .header { text-align: center; margin-bottom: 20px; }
+      .section-title { font-weight: bold; font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
+      .status-pass { color: green; font-weight: bold; }
+      .status-fail { color: red; font-weight: bold; }
     `;
 
-    const blob = new Blob(['\ufeff', htmlContent], {
+    // Header content
+    const headerHtml = `
+      <div class="header">
+        <h1>รายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)</h1>
+        <p>
+          <strong>วิชา:</strong> ${meta.subjectName} (${meta.subjectCode}) &nbsp;&nbsp;
+          <strong>อาจารย์ผู้สอน:</strong> ${meta.instructor}
+        </p>
+        <p>
+          <strong>ภาคเรียนที่:</strong> ${meta.semester}/${meta.year} &nbsp;&nbsp;
+          <strong>วันที่พิมพ์:</strong> ${new Date().toLocaleDateString('th-TH')}
+        </p>
+      </div>
+    `;
+
+    // Summary tables
+    const summaryHtml = `
+      <div class="section-title">1. สรุปผลการวิเคราะห์ (Summary Statistics)</div>
+      <table>
+        <tr>
+           <th>คะแนนเฉลี่ย (Mean)</th>
+           <th>ส่วนเบี่ยงเบนมาตรฐาน (SD)</th>
+           <th>ความเชื่อมั่น (KR-20)</th>
+           <th>ความเชื่อมั่น (KR-21)</th>
+        </tr>
+        <tr>
+           <td>${results.basic.mean} (เต็ม ${results.basic.fullScore})</td>
+           <td>${results.basic.sd}</td>
+           <td>${results.basic.kr20}</td>
+           <td>${results.basic.kr21}</td>
+        </tr>
+      </table>
+      <table>
+        <tr>
+           <th>คะแนนสูงสุด (Max)</th>
+           <th>คะแนนต่ำสุด (Min)</th>
+           <th>จำนวนนักเรียน (N)</th>
+        </tr>
+        <tr>
+           <td>${results.basic.max}</td>
+           <td>${results.basic.min}</td>
+           <td>${results.basic.count}</td>
+        </tr>
+      </table>
+    `;
+
+    // Item analysis rows
+    const itemsRows = results.items.map(item => {
+      const isPass = parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 && parseFloat(item.r) >= 0.2;
+      return `
+      <tr>
+        <td>${item.id}</td>
+        <td>${item.p}</td>
+        <td>${item.difficultyMeaning}</td>
+        <td>${item.r}</td>
+        <td>${item.discriminationMeaning}</td>
+        <td><span class="${isPass ? 'status-pass' : 'status-fail'}">${isPass ? '✓ ใช้ได้' : '✕ ควรปรับปรุง'}</span></td>
+      </tr>`;
+    }).join('');
+
+    // Items table
+    const itemsHtml = `
+      <div class="section-title">2. ตารางวิเคราะห์รายข้อ (Item Analysis)</div>
+      <table>
+        <thead>
+          <tr>
+            <th width="10%">ข้อที่</th>
+            <th width="15%">ค่าความยาก (p)</th>
+            <th width="20%">ความหมาย</th>
+            <th width="15%">อำนาจจำแนก (r)</th>
+            <th width="20%">ความหมาย</th>
+            <th width="20%">ผลสรุป</th>
+          </tr>
+        </thead>
+        <tbody>${itemsRows}</tbody>
+      </table>
+    `;
+
+    // Footer
+    const footerHtml = `
+      <br/><br/>
+      <div style="text-align: right; margin-top: 50px;">
+         <p>ลงชื่อ........................................................ผู้วิเคราะห์</p>
+         <p>(........................................................)</p>
+      </div>
+    `;
+
+    // Combine using string concatenation to avoid parser issues
+    // We break up the HTML tags to prevent them being parsed in source code
+    const docHead = '<' + 'html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"' + '>';
+    const docMeta = '<' + 'head' + '><meta charset="utf-8"><title>Report</title>';
+    const docStyle = '<' + 'style' + '>' + cssContent + '<' + '/style' + '><' + '/head' + '>';
+    const docBodyStart = '<' + 'body' + '>';
+    const docBodyEnd = '<' + '/body' + '><' + '/html' + '>';
+
+    const fullHtml = docHead + docMeta + docStyle + docBodyStart + headerHtml + summaryHtml + itemsHtml + footerHtml + docBodyEnd;
+
+    const blob = new Blob(['\ufeff', fullHtml], {
       type: 'application/msword'
     });
     const url = URL.createObjectURL(blob);
