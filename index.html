@@ -275,57 +275,58 @@ const App = () => {
     const titleStyle = 'font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 20px;';
     const infoStyle = 'text-align: left; margin-bottom: 10px;';
 
+    // Break up HTML tags to prevent parser confusion
     let html = '';
-    html += '\x3Chtml xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"\x3E';
-    html += '\x3Chead\x3E';
-    html += '\x3Cmeta charset="UTF-8"\x3E';
-    html += '\x3C!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Analysis Report</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
-    html += '\x3C/head\x3E';
-    html += '\x3Cbody\x3E';
+    html += '<' + 'html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"' + '>';
+    html += '<' + 'head' + '>';
+    html += '<' + 'meta charset="UTF-8"' + '>';
+    html += '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Analysis Report</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+    html += '<' + '/head' + '>';
+    html += '<' + 'body' + '>';
 
     // Header
-    html += '\x3Cdiv style="' + titleStyle + '"\x3Eรายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)\x3C/div\x3E';
-    html += '\x3Cdiv style="' + infoStyle + '"\x3Eวิชา: ' + meta.subjectName + ' (' + meta.subjectCode + ') | อาจารย์: ' + meta.instructor + ' | ภาคเรียน: ' + meta.semester + '/' + meta.year + '\x3C/div\x3E';
-    html += '\x3Cbr/\x3E';
+    html += '<' + 'div style="' + titleStyle + '"' + '>รายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)<' + '/div' + '>';
+    html += '<' + 'div style="' + infoStyle + '"' + '>วิชา: ' + meta.subjectName + ' (' + meta.subjectCode + ') | อาจารย์: ' + meta.instructor + ' | ภาคเรียน: ' + meta.semester + '/' + meta.year + '<' + '/div' + '>';
+    html += '<' + 'br/' + '>';
 
     // 1. Summary Stats
-    html += '\x3Cdiv\x3E\x3Cb\x3E1. สรุปผลการวิเคราะห์ (Summary Statistics)\x3C/b\x3E\x3C/div\x3E';
-    html += '\x3Ctable style="' + tableStyle + '"\x3E';
-    html += '\x3Ctr\x3E\x3Cth style="' + thStyle + '"\x3EMean\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3ESD\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3EKR-20\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3EKR-21\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3EMax\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3EMin\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3EN\x3C/th\x3E\x3C/tr\x3E';
-    html += '\x3Ctr\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.mean + '\x3C/td\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.sd + '\x3C/td\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.kr20 + '\x3C/td\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.kr21 + '\x3C/td\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.max + '\x3C/td\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.min + '\x3C/td\x3E';
-    html += '\x3Ctd style="' + tdStyle + '"\x3E' + results.basic.count + '\x3C/td\x3E';
-    html += '\x3C/tr\x3E';
-    html += '\x3C/table\x3E';
-    html += '\x3Cbr/\x3E';
+    html += '<' + 'div' + '><' + 'b' + '>1. สรุปผลการวิเคราะห์ (Summary Statistics)<' + '/b' + '><' + '/div' + '>';
+    html += '<' + 'table style="' + tableStyle + '"' + '>';
+    html += '<' + 'tr' + '><' + 'th style="' + thStyle + '"' + '>Mean<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>SD<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>KR-20<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>KR-21<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>Max<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>Min<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>N<' + '/th' + '><' + '/tr' + '>';
+    html += '<' + 'tr' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.mean + '<' + '/td' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.sd + '<' + '/td' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.kr20 + '<' + '/td' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.kr21 + '<' + '/td' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.max + '<' + '/td' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.min + '<' + '/td' + '>';
+    html += '<' + 'td style="' + tdStyle + '"' + '>' + results.basic.count + '<' + '/td' + '>';
+    html += '<' + '/tr' + '>';
+    html += '<' + '/table' + '>';
+    html += '<' + 'br/' + '>';
 
     // 2. Item Analysis
-    html += '\x3Cdiv\x3E\x3Cb\x3E2. ตารางวิเคราะห์รายข้อ (Item Analysis)\x3C/b\x3E\x3C/div\x3E';
-    html += '\x3Ctable style="' + tableStyle + '"\x3E';
-    html += '\x3Ctr\x3E\x3Cth style="' + thStyle + '"\x3Eข้อที่\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3Eค่าความยาก (p)\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3Eความหมาย\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3Eอำนาจจำแนก (r)\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3Eความหมาย\x3C/th\x3E\x3Cth style="' + thStyle + '"\x3Eผลสรุป\x3C/th\x3E\x3C/tr\x3E';
+    html += '<' + 'div' + '><' + 'b' + '>2. ตารางวิเคราะห์รายข้อ (Item Analysis)<' + '/b' + '><' + '/div' + '>';
+    html += '<' + 'table style="' + tableStyle + '"' + '>';
+    html += '<' + 'tr' + '><' + 'th style="' + thStyle + '"' + '>ข้อที่<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>ค่าความยาก (p)<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>ความหมาย<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>อำนาจจำแนก (r)<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>ความหมาย<' + '/th' + '><' + 'th style="' + thStyle + '"' + '>ผลสรุป<' + '/th' + '><' + '/tr' + '>';
     
     results.items.forEach(item => {
        const isPass = parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 && parseFloat(item.r) >= 0.2;
        const color = isPass ? 'green' : 'red';
        const text = isPass ? 'ใช้ได้' : 'ควรปรับปรุง';
-       html += '\x3Ctr\x3E';
-       html += '\x3Ctd style="' + tdStyle + '"\x3E' + item.id + '\x3C/td\x3E';
-       html += '\x3Ctd style="' + tdStyle + '"\x3E' + item.p + '\x3C/td\x3E';
-       html += '\x3Ctd style="' + tdStyle + '"\x3E' + item.difficultyMeaning + '\x3C/td\x3E';
-       html += '\x3Ctd style="' + tdStyle + '"\x3E' + item.r + '\x3C/td\x3E';
-       html += '\x3Ctd style="' + tdStyle + '"\x3E' + item.discriminationMeaning + '\x3C/td\x3E';
-       html += '\x3Ctd style="' + tdStyle + ' color:' + color + '; font-weight:bold;"\x3E' + text + '\x3C/td\x3E';
-       html += '\x3C/tr\x3E';
+       html += '<' + 'tr' + '>';
+       html += '<' + 'td style="' + tdStyle + '"' + '>' + item.id + '<' + '/td' + '>';
+       html += '<' + 'td style="' + tdStyle + '"' + '>' + item.p + '<' + '/td' + '>';
+       html += '<' + 'td style="' + tdStyle + '"' + '>' + item.difficultyMeaning + '<' + '/td' + '>';
+       html += '<' + 'td style="' + tdStyle + '"' + '>' + item.r + '<' + '/td' + '>';
+       html += '<' + 'td style="' + tdStyle + '"' + '>' + item.discriminationMeaning + '<' + '/td' + '>';
+       html += '<' + 'td style="' + tdStyle + ' color:' + color + '; font-weight:bold;"' + '>' + text + '<' + '/td' + '>';
+       html += '<' + '/tr' + '>';
     });
-    html += '\x3C/table\x3E';
+    html += '<' + '/table' + '>';
 
-    html += '\x3C/body\x3E';
-    html += '\x3C/html\x3E';
+    html += '<' + '/body' + '>';
+    html += '<' + '/html' + '>';
 
     const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
