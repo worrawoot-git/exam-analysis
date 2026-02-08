@@ -1,5 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, Calculator, RotateCcw, FileText, Download, AlertTriangle } from 'lucide-react';
+
+// ไอคอนแบบ SVG ที่ไม่ต้องลงไลบรารีเพิ่ม
+const Icons = {
+  Calculator: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>
+    </svg>
+  ),
+  FileText: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+    </svg>
+  ),
+  RotateCcw: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+    </svg>
+  ),
+  Save: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>
+    </svg>
+  ),
+  Download: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+    </svg>
+  ),
+  Plus: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14"/><path d="M12 5v14"/>
+    </svg>
+  ),
+  Trash2: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+    </svg>
+  ),
+  AlertTriangle: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+    </svg>
+  )
+};
 
 const ExamAnalysis = () => {
   // --- State: Metadata ---
@@ -341,7 +384,7 @@ const ExamAnalysis = () => {
         {/* Header Section */}
         <div className="bg-indigo-700 p-6 text-white">
           <div className="flex items-center gap-3 mb-2">
-            <Calculator className="w-8 h-8" />
+            <div className="w-8 h-8"><Icons.Calculator /></div>
             <h1 className="text-2xl font-bold">ระบบวิเคราะห์ข้อสอบ (Item Analysis)</h1>
           </div>
           <p className="text-indigo-100 opacity-80 text-sm">วิเคราะห์ค่าความยากง่าย (p), อำนาจจำแนก (r), KR-20 และ KR-21</p>
@@ -400,7 +443,7 @@ const ExamAnalysis = () => {
         {/* Configuration */}
         <div className="p-6 bg-gray-50 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-             <FileText className="w-5 h-5"/> การตั้งค่าข้อสอบ
+             <div className="w-5 h-5"><Icons.FileText/></div> การตั้งค่าข้อสอบ
           </h2>
           <div className="flex flex-wrap gap-6 items-end">
             <div>
@@ -439,20 +482,20 @@ const ExamAnalysis = () => {
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
                >
-                 <Download className="w-4 h-4" /> ส่งออก Word
+                 <div className="w-4 h-4"><Icons.Download/></div> ส่งออก Word
                </button>
 
                <button 
                   onClick={requestClearData}
                   className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition-colors"
                >
-                 <RotateCcw className="w-4 h-4" /> ล้างข้อมูล
+                 <div className="w-4 h-4"><Icons.RotateCcw/></div> ล้างข้อมูล
                </button>
                <button 
                   onClick={calculateResults}
                   className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-md font-medium transition-colors"
                >
-                 <Save className="w-4 h-4" /> วิเคราะห์ข้อมูล
+                 <div className="w-4 h-4"><Icons.Save/></div> วิเคราะห์ข้อมูล
                </button>
              </div>
           </div>
@@ -520,7 +563,7 @@ const ExamAnalysis = () => {
                     ))}
                     <td className="text-center border-b">
                       <button onClick={() => removeStudentRow(sIdx)} className="text-red-400 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
+                        <div className="w-4 h-4"><Icons.Trash2/></div>
                       </button>
                     </td>
                   </tr>
@@ -533,7 +576,7 @@ const ExamAnalysis = () => {
             onClick={addStudentRow}
             className="mt-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium"
           >
-            <Plus className="w-5 h-5" /> เพิ่มแถวนักเรียน
+            <div className="w-5 h-5"><Icons.Plus/></div> เพิ่มแถวนักเรียน
           </button>
         </div>
 
@@ -541,7 +584,7 @@ const ExamAnalysis = () => {
         {results && (
           <div className="bg-indigo-50 border-t-4 border-indigo-600 p-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <Calculator className="w-6 h-6 text-indigo-600"/> ผลการวิเคราะห์ข้อมูล
+              <div className="w-6 h-6 text-indigo-600"><Icons.Calculator/></div> ผลการวิเคราะห์ข้อมูล
             </h2>
             
             {/* Descriptive Stats */}
@@ -621,7 +664,7 @@ const ExamAnalysis = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center gap-3 text-red-600 mb-4">
-              <AlertTriangle className="w-8 h-8" />
+              <div className="w-8 h-8"><Icons.AlertTriangle/></div>
               <h3 className="text-lg font-bold">ยืนยันการล้างข้อมูล</h3>
             </div>
             <p className="mb-6 text-gray-600">
