@@ -1,0 +1,661 @@
+import React, { useState, useEffect } from 'react';
+import { Save, Plus, Trash2, Calculator, RotateCcw, FileText, Download, AlertTriangle } from 'lucide-react';
+
+const ExamAnalysis = () => {
+  // --- State: Metadata ---
+  const [meta, setMeta] = useState({
+    subjectName: '',
+    subjectCode: '',
+    instructor: '',
+    semester: '1',
+    year: new Date().getFullYear() + 543
+  });
+
+  // --- State: Configuration ---
+  const [config, setConfig] = useState({
+    numQuestions: 10,
+    numChoices: 4
+  });
+
+  // --- State: Data ---
+  const [keyAnswers, setKeyAnswers] = useState(Array(10).fill(''));
+  const [students, setStudents] = useState([]);
+  const [results, setResults] = useState(null);
+  
+  // --- State: UI ---
+  const [showClearDialog, setShowClearDialog] = useState(false);
+
+  // Initialize students
+  useEffect(() => {
+    const initialStudents = Array.from({ length: 10 }, (_, i) => ({
+      id: i + 1,
+      name: `นักเรียนคนที่ ${i + 1}`,
+      answers: Array(config.numQuestions).fill('')
+    }));
+    setStudents(initialStudents);
+  }, []);
+
+  // --- Handlers ---
+
+  const handleConfigChange = (field, value) => {
+    const val = parseInt(value) || 0;
+    if (val < 1) return;
+
+    setConfig(prev => ({ ...prev, [field]: val }));
+
+    if (field === 'numQuestions') {
+      setKeyAnswers(prev => {
+        const newArr = [...prev];
+        if (val > prev.length) {
+          return [...newArr, ...Array(val - prev.length).fill('')];
+        }
+        return newArr.slice(0, val);
+      });
+
+      setStudents(prev => prev.map(s => {
+        const newAnswers = [...s.answers];
+        if (val > newAnswers.length) {
+          return { ...s, answers: [...newAnswers, ...Array(val - newAnswers.length).fill('')] };
+        }
+        return { ...s, answers: newAnswers.slice(0, val) };
+      }));
+    }
+  };
+
+  const handleKeyChange = (index, value) => {
+    const newKeys = [...keyAnswers];
+    newKeys[index] = value;
+    setKeyAnswers(newKeys);
+  };
+
+  const handleStudentChange = (studentIndex, type, value, qIndex = null) => {
+    const newStudents = [...students];
+    if (type === 'name') {
+      newStudents[studentIndex].name = value;
+    } else if (type === 'answer') {
+      newStudents[studentIndex].answers[qIndex] = value;
+    }
+    setStudents(newStudents);
+  };
+
+  const addStudentRow = () => {
+    setStudents(prev => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        name: `นักเรียนคนที่ ${prev.length + 1}`,
+        answers: Array(config.numQuestions).fill('')
+      }
+    ]);
+  };
+
+  const removeStudentRow = (index) => {
+    setStudents(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // --- Export to Word Logic ---
+  const exportToWord = () => {
+    if (!results) {
+      alert("กรุณาวิเคราะห์ข้อมูลก่อนส่งออก");
+      return;
+    }
+
+    const htmlContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <title>รายงานผลการวิเคราะห์ข้อสอบ</title>
+        <style>
+          body { font-family: 'TH Sarabun New', 'Angsana New', sans-serif; }
+          table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+          th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+          th { background-color: #f0f0f0; }
+          .header { text-align: center; margin-bottom: 20px; }
+          .section-title { font-weight: bold; font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
+          .status-pass { color: green; font-weight: bold; }
+          .status-fail { color: red; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>รายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)</h1>
+          <p>
+            <strong>วิชา:</strong> ${meta.subjectName} (${meta.subjectCode}) &nbsp;&nbsp;
+            <strong>อาจารย์ผู้สอน:</strong> ${meta.instructor}
+          </p>
+          <p>
+            <strong>ภาคเรียนที่:</strong> ${meta.semester}/${meta.year} &nbsp;&nbsp;
+            <strong>วันที่พิมพ์:</strong> ${new Date().toLocaleDateString('th-TH')}
+          </p>
+        </div>
+
+        <div class="section-title">1. สรุปผลการวิเคราะห์ (Summary Statistics)</div>
+        <table>
+          <tr>
+             <th>คะแนนเฉลี่ย (Mean)</th>
+             <th>ส่วนเบี่ยงเบนมาตรฐาน (SD)</th>
+             <th>ความเชื่อมั่น (KR-20)</th>
+             <th>ความเชื่อมั่น (KR-21)</th>
+          </tr>
+          <tr>
+             <td>${results.basic.mean} (เต็ม ${results.basic.fullScore})</td>
+             <td>${results.basic.sd}</td>
+             <td>${results.basic.kr20}</td>
+             <td>${results.basic.kr21}</td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+             <th>คะแนนสูงสุด (Max)</th>
+             <th>คะแนนต่ำสุด (Min)</th>
+             <th>จำนวนนักเรียน (N)</th>
+          </tr>
+          <tr>
+             <td>${results.basic.max}</td>
+             <td>${results.basic.min}</td>
+             <td>${results.basic.count}</td>
+          </tr>
+        </table>
+
+        <div class="section-title">2. ตารางวิเคราะห์รายข้อ (Item Analysis)</div>
+        <table>
+          <thead>
+            <tr>
+              <th width="10%">ข้อที่</th>
+              <th width="15%">ค่าความยาก (p)</th>
+              <th width="20%">ความหมาย</th>
+              <th width="15%">อำนาจจำแนก (r)</th>
+              <th width="20%">ความหมาย</th>
+              <th width="20%">ผลสรุป</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.items.map(item => {
+              const isPass = parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 && parseFloat(item.r) >= 0.2;
+              return `
+              <tr>
+                <td>${item.id}</td>
+                <td>${item.p}</td>
+                <td>${item.difficultyMeaning}</td>
+                <td>${item.r}</td>
+                <td>${item.discriminationMeaning}</td>
+                <td><span class="${isPass ? 'status-pass' : 'status-fail'}">${isPass ? '✓ ใช้ได้' : '✕ ควรปรับปรุง'}</span></td>
+              </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+        
+        <br/><br/>
+        <div style="text-align: right; margin-top: 50px;">
+           <p>ลงชื่อ........................................................ผู้วิเคราะห์</p>
+           <p>(........................................................)</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\ufeff', htmlContent], {
+      type: 'application/msword'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `รายงานวิเคราะห์ข้อสอบ_${meta.subjectCode || 'Analysis'}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // --- Analysis Logic ---
+
+  const calculateResults = () => {
+    // 1. Scoring & Filtering
+    // Filter out students who have NO answers filled at all (Empty rows)
+    const activeStudents = students.filter(student => 
+      student.answers.some(ans => ans !== null && ans.trim() !== '')
+    );
+
+    if (activeStudents.length === 0) {
+      alert("กรุณากรอกข้อมูลคำตอบของนักเรียนอย่างน้อย 1 คน");
+      return;
+    }
+
+    const scoredStudents = activeStudents.map(student => {
+      let score = 0;
+      const itemScores = student.answers.map((ans, idx) => {
+        const isCorrect = ans && keyAnswers[idx] && String(ans).trim() === String(keyAnswers[idx]).trim();
+        if (isCorrect) score++;
+        return isCorrect ? 1 : 0;
+      });
+      return { ...student, score, itemScores };
+    });
+
+    const N = scoredStudents.length;
+    const K = config.numQuestions;
+
+    // 2. Basic Stats
+    const scores = scoredStudents.map(s => s.score);
+    const sumX = scores.reduce((a, b) => a + b, 0);
+    const sumX2 = scores.reduce((a, b) => a + (b * b), 0);
+    const mean = sumX / N;
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+    
+    // Variance (S^2)
+    const variance = (sumX2 - ((sumX * sumX) / N)) / N;
+    const sd = Math.sqrt(variance);
+
+    // 3. Item Analysis (Difficulty & Discrimination)
+    // Sort for Upper/Lower 27%
+    const sortedStudents = [...scoredStudents].sort((a, b) => b.score - a.score);
+    const splitCount = Math.ceil(N * 0.27);
+    
+    // Handle small sample size edge case
+    const upperGroup = splitCount > 0 ? sortedStudents.slice(0, splitCount) : sortedStudents;
+    const lowerGroup = splitCount > 0 ? sortedStudents.slice(N - splitCount) : [];
+
+    const itemAnalysis = [];
+    let sumPQ = 0;
+
+    for (let i = 0; i < K; i++) {
+      // Difficulty (p)
+      const correctCount = scoredStudents.filter(s => s.itemScores[i] === 1).length;
+      const p = correctCount / N;
+      const q = 1 - p;
+      sumPQ += (p * q);
+
+      // Discrimination (r)
+      const upperCorrect = upperGroup.filter(s => s.itemScores[i] === 1).length;
+      const lowerCorrect = lowerGroup.filter(s => s.itemScores[i] === 1).length;
+      
+      let r = 0;
+      if (splitCount > 0) {
+         r = (upperCorrect - lowerCorrect) / splitCount;
+      }
+
+      // Interpretations
+      let difficultyMeaning = "";
+      if (p < 0.20) difficultyMeaning = "ยากมาก";
+      else if (p < 0.40) difficultyMeaning = "ค่อนข้างยาก";
+      else if (p < 0.60) difficultyMeaning = "ปานกลาง (พอดี)";
+      else if (p < 0.80) difficultyMeaning = "ค่อนข้างง่าย";
+      else difficultyMeaning = "ง่ายมาก";
+
+      let discriminationMeaning = "";
+      if (r >= 0.40) discriminationMeaning = "จำแนกได้ดีมาก";
+      else if (r >= 0.30) discriminationMeaning = "จำแนกได้ดี";
+      else if (r >= 0.20) discriminationMeaning = "จำแนกได้พอใช้";
+      else discriminationMeaning = "จำแนกได้ไม่ดี/ควรปรับปรุง";
+
+      itemAnalysis.push({
+        id: i + 1,
+        p: p.toFixed(2),
+        r: r.toFixed(2),
+        difficultyMeaning,
+        discriminationMeaning
+      });
+    }
+
+    // 4. Reliability
+    let kr20 = 0;
+    if (variance > 0 && K > 1) {
+      kr20 = (K / (K - 1)) * (1 - (sumPQ / variance));
+    }
+
+    let kr21 = 0;
+    if (variance > 0 && K > 1) {
+      kr21 = (K / (K - 1)) * (1 - ((mean * (K - mean)) / (K * variance)));
+    }
+
+    setResults({
+      basic: { 
+        count: N, 
+        fullScore: K, 
+        mean: mean.toFixed(2), 
+        sd: sd.toFixed(2), 
+        max, 
+        min, 
+        kr20: kr20.toFixed(3), 
+        kr21: kr21.toFixed(3) 
+      },
+      items: itemAnalysis
+    });
+  };
+
+  const requestClearData = () => {
+    setShowClearDialog(true);
+  };
+
+  const confirmClearData = () => {
+    setKeyAnswers(Array(config.numQuestions).fill(''));
+    setStudents(prev => prev.map(s => ({ ...s, answers: Array(config.numQuestions).fill('') })));
+    setResults(null);
+    setShowClearDialog(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6 font-sans">
+      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+        
+        {/* Header Section */}
+        <div className="bg-indigo-700 p-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <Calculator className="w-8 h-8" />
+            <h1 className="text-2xl font-bold">ระบบวิเคราะห์ข้อสอบ (Item Analysis)</h1>
+          </div>
+          <p className="text-indigo-100 opacity-80 text-sm">วิเคราะห์ค่าความยากง่าย (p), อำนาจจำแนก (r), KR-20 และ KR-21</p>
+        </div>
+
+        {/* Input Forms */}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border-b border-gray-200">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อวิชา</label>
+            <input 
+              type="text" 
+              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border p-2"
+              value={meta.subjectName} onChange={e => setMeta({...meta, subjectName: e.target.value})}
+              placeholder="เช่น คณิตศาสตร์"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">รหัสวิชา</label>
+            <input 
+              type="text" 
+              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border p-2"
+              value={meta.subjectCode} onChange={e => setMeta({...meta, subjectCode: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">อาจารย์ผู้สอน</label>
+            <input 
+              type="text" 
+              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border p-2"
+              value={meta.instructor} onChange={e => setMeta({...meta, instructor: e.target.value})}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ภาคเรียน</label>
+              <select 
+                className="w-full border-gray-300 rounded-md shadow-sm border p-2"
+                value={meta.semester} onChange={e => setMeta({...meta, semester: e.target.value})}
+              >
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ปีการศึกษา</label>
+              <input 
+                type="number" 
+                className="w-full border-gray-300 rounded-md shadow-sm border p-2"
+                value={meta.year} onChange={e => setMeta({...meta, year: e.target.value})}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Configuration */}
+        <div className="p-6 bg-gray-50 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+             <FileText className="w-5 h-5"/> การตั้งค่าข้อสอบ
+          </h2>
+          <div className="flex flex-wrap gap-6 items-end">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนข้อสอบ</label>
+              <input 
+                type="number" min="1" max="100"
+                className="w-32 border-gray-300 rounded-md shadow-sm border p-2"
+                value={config.numQuestions} 
+                onChange={e => handleConfigChange('numQuestions', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนตัวเลือก (Choice)</label>
+              <input 
+                type="number" min="2" max="10"
+                className="w-32 border-gray-300 rounded-md shadow-sm border p-2"
+                value={config.numChoices} 
+                onChange={e => handleConfigChange('numChoices', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Data Entry Table */}
+        <div className="p-6 overflow-x-auto">
+          <div className="flex justify-between items-center mb-4">
+             <h2 className="text-lg font-semibold text-gray-800">กรอกข้อมูลเฉลยและคำตอบ</h2>
+             <div className="flex gap-2">
+               {/* Export Button */}
+               <button 
+                  onClick={exportToWord}
+                  disabled={!results}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-gray-300 ${
+                    results 
+                    ? 'bg-green-600 text-white hover:bg-green-700 border-green-700 shadow-sm' 
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+               >
+                 <Download className="w-4 h-4" /> ส่งออก Word
+               </button>
+
+               <button 
+                  onClick={requestClearData}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition-colors"
+               >
+                 <RotateCcw className="w-4 h-4" /> ล้างข้อมูล
+               </button>
+               <button 
+                  onClick={calculateResults}
+                  className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-md font-medium transition-colors"
+               >
+                 <Save className="w-4 h-4" /> วิเคราะห์ข้อมูล
+               </button>
+             </div>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm text-left text-gray-500">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0">
+                <tr>
+                  <th scope="col" className="px-4 py-3 min-w-[50px] border-b border-gray-300">#</th>
+                  <th scope="col" className="px-4 py-3 min-w-[200px] sticky left-0 bg-gray-200 z-10 shadow-r border-b border-gray-300">ชื่อ - นามสกุล</th>
+                  {Array.from({ length: config.numQuestions }).map((_, i) => (
+                    <th key={i} scope="col" className="px-1 py-3 text-center min-w-[30px] border-l border-b border-gray-300">
+                      {i + 1}
+                    </th>
+                  ))}
+                  <th scope="col" className="px-4 py-3 text-center min-w-[60px] border-b border-gray-300">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Key Row */}
+                <tr className="bg-yellow-50 border-b-2 border-indigo-200">
+                  <td className="px-4 py-3 font-bold text-indigo-700 border-b">Key</td>
+                  <td className="px-4 py-3 font-bold text-indigo-700 sticky left-0 bg-yellow-50 z-10 shadow-r border-b">เฉลยคำตอบ (Key)</td>
+                  {keyAnswers.map((key, i) => (
+                    <td key={i} className="p-1 border-l border-indigo-100 border-b">
+                      <input 
+                        type="text" 
+                        maxLength={1}
+                        className="w-full text-center p-1 border border-yellow-300 rounded bg-white focus:outline-none focus:border-indigo-500 font-bold text-indigo-700"
+                        value={key}
+                        onChange={(e) => handleKeyChange(i, e.target.value)}
+                      />
+                    </td>
+                  ))}
+                  <td className="text-center text-xs text-gray-400 border-b">Locked</td>
+                </tr>
+
+                {/* Student Rows */}
+                {students.map((student, sIdx) => (
+                  <tr key={student.id} className="bg-white border-b hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-2 border-b">{sIdx + 1}</td>
+                    <td className="px-4 py-2 sticky left-0 bg-white z-10 shadow-r group-hover:bg-gray-50 border-b">
+                      <input 
+                        type="text" 
+                        className="w-full border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-indigo-500"
+                        value={student.name}
+                        onChange={(e) => handleStudentChange(sIdx, 'name', e.target.value)}
+                      />
+                    </td>
+                    {student.answers.map((ans, qIdx) => (
+                      <td key={qIdx} className="p-1 border-l border-b border-gray-100">
+                        <input 
+                          type="text" 
+                          maxLength={1}
+                          className={`w-full text-center p-1 border rounded focus:outline-none focus:border-indigo-500 ${
+                            results && results.items ? 
+                            (ans && keyAnswers[qIdx] && ans == keyAnswers[qIdx] ? 'bg-green-50 text-green-700 border-green-200' : 
+                             ans ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white border-gray-200') 
+                            : 'bg-white border-gray-200'
+                          }`}
+                          value={ans}
+                          onChange={(e) => handleStudentChange(sIdx, 'answer', e.target.value, qIdx)}
+                        />
+                      </td>
+                    ))}
+                    <td className="text-center border-b">
+                      <button onClick={() => removeStudentRow(sIdx)} className="text-red-400 hover:text-red-600">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <button 
+            onClick={addStudentRow}
+            className="mt-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium"
+          >
+            <Plus className="w-5 h-5" /> เพิ่มแถวนักเรียน
+          </button>
+        </div>
+
+        {/* Analysis Results Section */}
+        {results && (
+          <div className="bg-indigo-50 border-t-4 border-indigo-600 p-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+              <Calculator className="w-6 h-6 text-indigo-600"/> ผลการวิเคราะห์ข้อมูล
+            </h2>
+            
+            {/* Descriptive Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <StatCard title="คะแนนเฉลี่ย (Mean)" value={results.basic.mean} desc={`เต็ม ${results.basic.fullScore}`} />
+              <StatCard title="SD" value={results.basic.sd} desc="การกระจาย" />
+              <StatCard title="KR-20" value={results.basic.kr20} desc="> 0.7 ดี" highlight={parseFloat(results.basic.kr20) >= 0.7} />
+              <StatCard title="KR-21" value={results.basic.kr21} desc="ค่าประมาณ" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+               <div className="bg-white p-4 rounded shadow text-center border">
+                  <div className="text-sm text-gray-500">คะแนนสูงสุด (Max)</div>
+                  <div className="text-xl font-bold text-green-600">{results.basic.max}</div>
+               </div>
+               <div className="bg-white p-4 rounded shadow text-center border">
+                  <div className="text-sm text-gray-500">คะแนนต่ำสุด (Min)</div>
+                  <div className="text-xl font-bold text-red-600">{results.basic.min}</div>
+               </div>
+               <div className="bg-white p-4 rounded shadow text-center border">
+                  <div className="text-sm text-gray-500">จำนวนนักเรียน (N)</div>
+                  <div className="text-xl font-bold text-gray-800">{results.basic.count} <span className="text-xs font-normal text-gray-400">(ตัดแถวว่าง)</span></div>
+               </div>
+            </div>
+
+            {/* Item Analysis Table */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">วิเคราะห์รายข้อ (Item Analysis)</h3>
+            <div className="overflow-x-auto bg-white rounded-lg shadow">
+              <table className="w-full text-sm text-left text-gray-600">
+                <thead className="bg-gray-100 text-gray-700 uppercase font-semibold">
+                  <tr>
+                    <th className="px-6 py-3 border-b">ข้อที่</th>
+                    <th className="px-6 py-3 border-b">ค่าความยาก (p)</th>
+                    <th className="px-6 py-3 border-b">ความหมาย</th>
+                    <th className="px-6 py-3 border-b">อำนาจจำแนก (r)</th>
+                    <th className="px-6 py-3 border-b">ความหมาย</th>
+                    <th className="px-6 py-3 text-center border-b">ผลสรุป</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.items.map((item, idx) => (
+                    <tr key={idx} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-3 font-medium text-gray-900 border-r">{item.id}</td>
+                      <td className="px-6 py-3 border-r">{item.p}</td>
+                      <td className="px-6 py-3 border-r">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {item.difficultyMeaning}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 border-r">{item.r}</td>
+                      <td className="px-6 py-3 border-r">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          parseFloat(item.r) >= 0.2 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item.discriminationMeaning}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-center">
+                         {parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 && parseFloat(item.r) >= 0.2 ? 
+                           <span className="text-green-600 font-bold">✓ ใช้ได้</span> : 
+                           <span className="text-red-500 font-bold">✕ ปรับปรุง</span>
+                         }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation Modal */}
+      {showClearDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <AlertTriangle className="w-8 h-8" />
+              <h3 className="text-lg font-bold">ยืนยันการล้างข้อมูล</h3>
+            </div>
+            <p className="mb-6 text-gray-600">
+              คุณแน่ใจหรือไม่ที่จะล้างข้อมูลคำตอบของนักเรียนทั้งหมด? 
+              <br/><span className="text-xs text-red-400">*การกระทำนี้ไม่สามารถกู้คืนข้อมูลได้</span>
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowClearDialog(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 font-medium"
+              >
+                ยกเลิก
+              </button>
+              <button 
+                onClick={confirmClearData}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium"
+              >
+                ยืนยัน ล้างข้อมูล
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper Component for Stats
+const StatCard = ({ title, value, desc, highlight = null }) => (
+  <div className={`bg-white p-4 rounded-lg shadow border-l-4 ${highlight === true ? 'border-green-500' : highlight === false ? 'border-red-500' : 'border-indigo-500'}`}>
+    <h4 className="text-gray-500 text-sm font-medium uppercase">{title}</h4>
+    <div className="mt-2 text-3xl font-bold text-gray-800">{value}</div>
+    <p className="text-xs text-gray-400 mt-1">{desc}</p>
+  </div>
+);
+
+export default ExamAnalysis;
