@@ -45,7 +45,6 @@ const Icons = {
   )
 };
 
-// เปลี่ยนชื่อ Component หลักเป็น App เพื่อให้ตรงตามมาตรฐาน React Project ทั่วไป
 const App = () => {
   // --- State: Metadata ---
   const [meta, setMeta] = useState({
@@ -153,108 +152,82 @@ const App = () => {
       th { background-color: #f0f0f0; }
       .header { text-align: center; margin-bottom: 20px; }
       .section-title { font-weight: bold; font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
-      .status-pass { color: green; font-weight: bold; }
-      .status-fail { color: red; font-weight: bold; }
     `;
 
-    // Header content
-    const headerHtml = `
-      <div class="header">
-        <h1>รายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)</h1>
-        <p>
-          <strong>วิชา:</strong> ${meta.subjectName} (${meta.subjectCode}) &nbsp;&nbsp;
-          <strong>อาจารย์ผู้สอน:</strong> ${meta.instructor}
-        </p>
-        <p>
-          <strong>ภาคเรียนที่:</strong> ${meta.semester}/${meta.year} &nbsp;&nbsp;
-          <strong>วันที่พิมพ์:</strong> ${new Date().toLocaleDateString('th-TH')}
-        </p>
-      </div>
-    `;
+    // Construct HTML string using escaped brackets (\x3C instead of <)
+    // This prevents the browser/parser from misinterpreting the code as actual HTML structure
+    let html = '';
+    html += '\x3Chtml xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"\x3E';
+    html += '\x3Chead\x3E';
+    html += '\x3Cmeta charset="utf-8"\x3E';
+    html += '\x3Ctitle\x3Eรายงานผลการวิเคราะห์ข้อสอบ\x3C/title\x3E';
+    html += '\x3Cstyle\x3E' + cssContent + '\x3C/style\x3E';
+    html += '\x3C/head\x3E';
+    html += '\x3Cbody\x3E';
 
-    // Summary tables
-    const summaryHtml = `
-      <div class="section-title">1. สรุปผลการวิเคราะห์ (Summary Statistics)</div>
-      <table>
-        <tr>
-           <th>คะแนนเฉลี่ย (Mean)</th>
-           <th>ส่วนเบี่ยงเบนมาตรฐาน (SD)</th>
-           <th>ความเชื่อมั่น (KR-20)</th>
-           <th>ความเชื่อมั่น (KR-21)</th>
-        </tr>
-        <tr>
-           <td>${results.basic.mean} (เต็ม ${results.basic.fullScore})</td>
-           <td>${results.basic.sd}</td>
-           <td>${results.basic.kr20}</td>
-           <td>${results.basic.kr21}</td>
-        </tr>
-      </table>
-      <table>
-        <tr>
-           <th>คะแนนสูงสุด (Max)</th>
-           <th>คะแนนต่ำสุด (Min)</th>
-           <th>จำนวนนักเรียน (N)</th>
-        </tr>
-        <tr>
-           <td>${results.basic.max}</td>
-           <td>${results.basic.min}</td>
-           <td>${results.basic.count}</td>
-        </tr>
-      </table>
-    `;
+    // Header
+    html += '\x3Cdiv class="header"\x3E';
+    html += '\x3Ch1\x3Eรายงานผลการวิเคราะห์ข้อสอบ (Item Analysis)\x3C/h1\x3E';
+    html += '\x3Cp\x3E\x3Cstrong\x3Eวิชา:\x3C/strong\x3E ' + meta.subjectName + ' (' + meta.subjectCode + ') &nbsp;&nbsp; \x3Cstrong\x3Eอาจารย์ผู้สอน:\x3C/strong\x3E ' + meta.instructor + '\x3C/p\x3E';
+    html += '\x3Cp\x3E\x3Cstrong\x3Eภาคเรียนที่:\x3C/strong\x3E ' + meta.semester + '/' + meta.year + ' &nbsp;&nbsp; \x3Cstrong\x3Eวันที่พิมพ์:\x3C/strong\x3E ' + new Date().toLocaleDateString('th-TH') + '\x3C/p\x3E';
+    html += '\x3C/div\x3E';
 
-    // Item analysis rows
-    const itemsRows = results.items.map(item => {
+    // Section 1: Summary
+    html += '\x3Cdiv class="section-title"\x3E1. สรุปผลการวิเคราะห์ (Summary Statistics)\x3C/div\x3E';
+    html += '\x3Ctable\x3E';
+    html += '\x3Ctr\x3E\x3Cth\x3Eคะแนนเฉลี่ย (Mean)\x3C/th\x3E\x3Cth\x3Eส่วนเบี่ยงเบนมาตรฐาน (SD)\x3C/th\x3E\x3Cth\x3Eความเชื่อมั่น (KR-20)\x3C/th\x3E\x3Cth\x3Eความเชื่อมั่น (KR-21)\x3C/th\x3E\x3C/tr\x3E';
+    html += '\x3Ctr\x3E';
+    html += '\x3Ctd\x3E' + results.basic.mean + ' (เต็ม ' + results.basic.fullScore + ')\x3C/td\x3E';
+    html += '\x3Ctd\x3E' + results.basic.sd + '\x3C/td\x3E';
+    html += '\x3Ctd\x3E' + results.basic.kr20 + '\x3C/td\x3E';
+    html += '\x3Ctd\x3E' + results.basic.kr21 + '\x3C/td\x3E';
+    html += '\x3C/tr\x3E';
+    html += '\x3C/table\x3E';
+
+    html += '\x3Ctable\x3E';
+    html += '\x3Ctr\x3E\x3Cth\x3Eคะแนนสูงสุด (Max)\x3C/th\x3E\x3Cth\x3Eคะแนนต่ำสุด (Min)\x3C/th\x3E\x3Cth\x3Eจำนวนนักเรียน (N)\x3C/th\x3E\x3C/tr\x3E';
+    html += '\x3Ctr\x3E';
+    html += '\x3Ctd\x3E' + results.basic.max + '\x3C/td\x3E';
+    html += '\x3Ctd\x3E' + results.basic.min + '\x3C/td\x3E';
+    html += '\x3Ctd\x3E' + results.basic.count + '\x3C/td\x3E';
+    html += '\x3C/tr\x3E';
+    html += '\x3C/table\x3E';
+
+    // Section 2: Items
+    html += '\x3Cdiv class="section-title"\x3E2. ตารางวิเคราะห์รายข้อ (Item Analysis)\x3C/div\x3E';
+    html += '\x3Ctable\x3E';
+    html += '\x3Cthead\x3E\x3Ctr\x3E';
+    html += '\x3Cth width="10%"\x3Eข้อที่\x3C/th\x3E\x3Cth width="15%"\x3Eค่าความยาก (p)\x3C/th\x3E\x3Cth width="20%"\x3Eความหมาย\x3C/th\x3E\x3Cth width="15%"\x3Eอำนาจจำแนก (r)\x3C/th\x3E\x3Cth width="20%"\x3Eความหมาย\x3C/th\x3E\x3Cth width="20%"\x3Eผลสรุป\x3C/th\x3E';
+    html += '\x3C/tr\x3E\x3C/thead\x3E';
+    html += '\x3Ctbody\x3E';
+
+    results.items.forEach(item => {
       const isPass = parseFloat(item.p) >= 0.2 && parseFloat(item.p) <= 0.8 && parseFloat(item.r) >= 0.2;
-      return `
-      <tr>
-        <td>${item.id}</td>
-        <td>${item.p}</td>
-        <td>${item.difficultyMeaning}</td>
-        <td>${item.r}</td>
-        <td>${item.discriminationMeaning}</td>
-        <td><span class="${isPass ? 'status-pass' : 'status-fail'}">${isPass ? '✓ ใช้ได้' : '✕ ควรปรับปรุง'}</span></td>
-      </tr>`;
-    }).join('');
+      const statusColor = isPass ? 'green' : 'red';
+      const statusIcon = isPass ? '✓ ใช้ได้' : '✕ ควรปรับปรุง';
 
-    // Items table
-    const itemsHtml = `
-      <div class="section-title">2. ตารางวิเคราะห์รายข้อ (Item Analysis)</div>
-      <table>
-        <thead>
-          <tr>
-            <th width="10%">ข้อที่</th>
-            <th width="15%">ค่าความยาก (p)</th>
-            <th width="20%">ความหมาย</th>
-            <th width="15%">อำนาจจำแนก (r)</th>
-            <th width="20%">ความหมาย</th>
-            <th width="20%">ผลสรุป</th>
-          </tr>
-        </thead>
-        <tbody>${itemsRows}</tbody>
-      </table>
-    `;
+      html += '\x3Ctr\x3E';
+      html += '\x3Ctd\x3E' + item.id + '\x3C/td\x3E';
+      html += '\x3Ctd\x3E' + item.p + '\x3C/td\x3E';
+      html += '\x3Ctd\x3E' + item.difficultyMeaning + '\x3C/td\x3E';
+      html += '\x3Ctd\x3E' + item.r + '\x3C/td\x3E';
+      html += '\x3Ctd\x3E' + item.discriminationMeaning + '\x3C/td\x3E';
+      html += '\x3Ctd\x3E\x3Cspan style="color:' + statusColor + '; font-weight:bold"\x3E' + statusIcon + '\x3C/span\x3E\x3C/td\x3E';
+      html += '\x3C/tr\x3E';
+    });
+
+    html += '\x3C/tbody\x3E\x3C/table\x3E';
 
     // Footer
-    const footerHtml = `
-      <br/><br/>
-      <div style="text-align: right; margin-top: 50px;">
-         <p>ลงชื่อ........................................................ผู้วิเคราะห์</p>
-         <p>(........................................................)</p>
-      </div>
-    `;
+    html += '\x3Cbr/\x3E\x3Cbr/\x3E';
+    html += '\x3Cdiv style="text-align: right; margin-top: 50px;"\x3E';
+    html += '\x3Cp\x3Eลงชื่อ........................................................ผู้วิเคราะห์\x3C/p\x3E';
+    html += '\x3Cp\x3E(........................................................)\x3C/p\x3E';
+    html += '\x3C/div\x3E';
 
-    // Combine using string concatenation to avoid parser issues
-    // We break up the HTML tags to prevent them being parsed in source code
-    const docHead = '<' + 'html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"' + '>';
-    const docMeta = '<' + 'head' + '><meta charset="utf-8"><title>Report</title>';
-    const docStyle = '<' + 'style' + '>' + cssContent + '<' + '/style' + '><' + '/head' + '>';
-    const docBodyStart = '<' + 'body' + '>';
-    const docBodyEnd = '<' + '/body' + '><' + '/html' + '>';
+    html += '\x3C/body\x3E\x3C/html\x3E';
 
-    const fullHtml = docHead + docMeta + docStyle + docBodyStart + headerHtml + summaryHtml + itemsHtml + footerHtml + docBodyEnd;
-
-    const blob = new Blob(['\ufeff', fullHtml], {
+    const blob = new Blob(['\ufeff', html], {
       type: 'application/msword'
     });
     const url = URL.createObjectURL(blob);
