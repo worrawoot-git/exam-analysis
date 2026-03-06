@@ -1,13 +1,17 @@
 {
   "name": "exam-analysis",
   "version": "1.0.0",
-  "description": "Exam analysis application",
-  "main": "index.js",
   "private": true,
+
   "scripts": {
-    "start": "node index.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {}
+
+  "dependencies": {},
+
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
 }
